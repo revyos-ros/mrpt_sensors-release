@@ -1,3 +1,32 @@
+## mrpt_sensors (jazzy) - 0.2.0-1
+
+The packages in the `mrpt_sensors` repository were released into the `jazzy` distro by running `/home/z572/gits/revyos-ros/venv/bin/bloom-release -r jazzy mrpt_sensors --override-release-repository-push-url git@github.com:revyos-ros/mrpt_sensors-release` on `Wed, 26 Jun 2024 05:05:09 -0000`
+
+These packages were released:
+- `mrpt_generic_sensor`
+- `mrpt_sensor_bumblebee_stereo`
+- `mrpt_sensor_gnns_nmea`
+- `mrpt_sensor_imu_taobotics`
+- `mrpt_sensorlib`
+- `mrpt_sensors`
+
+Version of package(s) in repository `mrpt_sensors`:
+
+- upstream repository: https://github.com/mrpt-ros-pkg/mrpt_sensors.git
+- release repository: https://github.com/revyos-ros/mrpt_sensors-release.git
+- rosdistro version: `0.1.0-2`
+- old version: `0.1.0-2`
+- new version: `0.2.0-1`
+
+Versions of tools used:
+
+- bloom version: `0.12.0`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## mrpt_sensors (rolling) - 0.2.0-1
 
 The packages in the `mrpt_sensors` repository were released into the `rolling` distro by running `/home/jlblanco/code/bloom-venv/bin/bloom-release -y -r rolling mrpt_sensors` on `Mon, 20 May 2024 22:00:52 -0000`
