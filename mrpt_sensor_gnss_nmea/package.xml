@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>mrpt_sensor_imu_taobotics</name>
+  <name>mrpt_sensor_gnss_nmea</name>
   <version>0.2.3</version>
-  <description>ROS node for Taobotics USB IMUs (based on mrpt-hwdrivers)</description>
+  <description>ROS node for GNSS receivers generating NMEA messages (based on mrpt-hwdrivers)</description>
 
   <url type="website">https://github.com/mrpt-ros-pkg/mrpt_sensors</url>
   <maintainer email="joseluisblancoc@gmail.com">José Luis Blanco-Claraco</maintainer>
@@ -22,7 +22,7 @@
 
   <depend>mrpt_msgs</depend>
   <depend>mrpt_sensorlib</depend>
-
+  <depend>nmea_msgs</depend>
 
   <depend>mrpt_libhwdrivers</depend>
   <depend>mrpt_libros_bridge</depend>
@@ -38,6 +38,7 @@
   <depend condition="$ROS_VERSION == 1">roscpp</depend>
   <depend condition="$ROS_VERSION == 2">rclcpp</depend>
   <!-- -->
+
 
   <depend>ament_lint_common</depend>
   <depend>ament_lint_auto</depend>
