@@ -1,6 +1,6 @@
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package mrpt_sensorlib
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package mrpt_sensor_gnss_nmea
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.2.3 (2024-09-01)
 ------------------
@@ -15,28 +15,29 @@ Changelog for package mrpt_sensorlib
   Use gnss base topic name
 * Reuse base class publish topic name
   add missing getter
-* Contributors: Jose Luis Blanco-Claraco
+* Merge pull request `#8 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/8>`_ from mrpt-ros-pkg/use-gnss-base-topic-name
+  Reuse base class publish topic name
+* Reuse base class publish topic name
+* Merge pull request `#6 <https://github.com/mrpt-ros-pkg/mrpt_sensors/issues/6>`_ from r-aguilera/ros2
+  fix uninitialized publishers in NMEA msg publishers
+* fix uninitialized publishers
+* Contributors: Jose Luis Blanco-Claraco, Raúl Aguilera
 
 0.2.1 (2024-07-03)
 ------------------
-* Publish NMEA ROS2 native msgs: GGA, GSA, RMC
+* Fix typo in GNSS names
 * Contributors: Jose Luis Blanco-Claraco
 
 0.2.0 (2024-05-20)
 ------------------
-* FIX: Implement the missing "saveToRawlog" feature
 * Add parameter to set the sensorLabel of generated observations
-* Limit publication of /tf sensor poses to a maximum configurable rate
-* BUGFIX: tf error if sensor_frame_id==robot_frame_id
 * Contributors: Jose Luis Blanco-Claraco
 
 0.1.0 (2024-03-28)
 ------------------
 * publish sensor pose to /tf
-* fix missing namespace
 * Reformat with clang-format to fix ament_linters
-* Comply with ROS2 REP-2003
-* Fix usage of obsolete mrpt methods
-* delegate conversion to mrpt::ros2bridge
-* Port to ROS2
+* more conservative uncertainty
+* fix covariance term index
+* create gnss node
 * Contributors: Jose Luis Blanco-Claraco
