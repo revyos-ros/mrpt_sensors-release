@@ -3,6 +3,34 @@
    |                                                                        |
    | Copyright (c) 2017-2024, Individual contributors, see commit authors   |
    | See: https://github.com/mrpt-ros-pkg/mrpt_sensors                      |
+   |                                                                        |
+   | Redistribution and use in source and binary forms, with or without     |
+   | modification, are permitted provided that the following conditions     |
+   | are met:                                                               |
+   |                                                                        |
+   | 1. Redistributions of source code must retain the above copyright      |
+   |    notice, this list of conditions and the following disclaimer.       |
+   |                                                                        |
+   | 2. Redistributions in binary form must reproduce the above copyright   |
+   |    notice, this list of conditions and the following disclaimer in the |
+   |    documentation and/or other materials provided with the distribution.|
+   |                                                                        |
+   | 3. Neither the name of the copyright holder nor the names of its       |
+   |    contributors may be used to endorse or promote products derived     |
+   |    from this software without specific prior written permission.       |
+   |                                                                        |
+   | THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS    |
+   | "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT      |
+   | LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR  |
+   | A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   |
+   | HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, |
+   | SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT       |
+   | LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,  |
+   | DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY  |
+   | THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT    |
+   | (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  |
+   | OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   |
+   |                                                                        |
    | All rights reserved. Released under BSD 3-Clause license. See LICENSE  |
    +------------------------------------------------------------------------+ */
 
@@ -49,7 +77,7 @@ void GenericSensorNode::init()
         cfg_section = this->get_parameter("config_section").as_string();
 
         mrpt::config::CConfigFile iniFile(cfgfilename);
-        init(iniFile, cfg_section);
+        init(iniFile, {cfg_section});
     }
     catch (const std::exception& e)
     {
@@ -77,7 +105,7 @@ void text_replace(
 
 void GenericSensorNode::init(
     const char* templateText, const std::vector<TemplateParameter>& rosParams,
-    const std::string& section)
+    const std::vector<std::string>& sections)
 {
     using namespace std::string_literals;
 
@@ -110,11 +138,12 @@ void GenericSensorNode::init(
                                 << text);
 
     mrpt::config::CConfigFileMemory cfg(text);
-    init(cfg, section);
+    init(cfg, sections);
 }
 
 void GenericSensorNode::init(
-    const mrpt::config::CConfigFileBase& config, const std::string& section)
+    const mrpt::config::CConfigFileBase& config,
+    const std::vector<std::string>& sections)
 {
     try
     {
@@ -151,26 +180,33 @@ void GenericSensorNode::init(
 
         // ----------------- End of common ROS 2 params -----------------
 
-        // Call sensor factory:
-        std::string driver_name =
-            config.read_string(section, "driver", "", true);
-        sensor_ = mrpt::hwdrivers::CGenericSensor::createSensorPtr(driver_name);
-        if (!sensor_)
+        // For each defined sensor:
+        for (const auto& section : sections)
         {
-            RCLCPP_ERROR_STREAM(
-                this->get_logger(),
-                "Sensor class name not recognized: " << driver_name);
-            return;
+            // Call sensor factory:
+            std::string driver_name =
+                config.read_string(section, "driver", "", true);
+            auto sensor =
+                mrpt::hwdrivers::CGenericSensor::createSensorPtr(driver_name);
+            if (!sensor)
+            {
+                RCLCPP_ERROR_STREAM(
+                    this->get_logger(),
+                    "Sensor class name not recognized: " << driver_name);
+                return;
+            }
+
+            sensors_.push_back(sensor);
+
+            // Load common & sensor-specific parameters:
+            sensor->loadConfig(config, section);
+
+            // Initialize sensor:
+            sensor->initialize();
+
+            // Custom init:
+            if (init_sensor_specific) init_sensor_specific();
         }
-
-        // Load common & sensor-specific parameters:
-        sensor_->loadConfig(config, section);
-
-        // Initialize sensor:
-        sensor_->initialize();
-
-        // Custom init:
-        if (init_sensor_specific) init_sensor_specific();
 
         // Open rawlog file, if enabled:
         if (!out_rawlog_prefix_.empty())
@@ -209,30 +245,34 @@ void GenericSensorNode::init(
 
 void GenericSensorNode::run()
 {
-    RCLCPP_INFO(
-        this->get_logger(), "Starting run() at %.02f Hz",
-        sensor_->getProcessRate());
-    if (!sensor_)
+    if (sensors_.empty() || !sensors_.at(0))
     {
         RCLCPP_ERROR(
             this->get_logger(),
             "Aborting: sensor object was not properly initialized.");
         return;
     }
-    rclcpp::Rate loop_rate(sensor_->getProcessRate());
+    const double rate = sensors_.at(0)->getProcessRate();
+    RCLCPP_INFO(this->get_logger(), "Starting run() at %.02f Hz", rate);
+
+    rclcpp::Rate loop_rate(rate);
     while (rclcpp::ok())
     {
-        sensor_->doProcess();
-
-        // Get new observations
-        const mrpt::hwdrivers::CGenericSensor::TListObservations lstObjs =
-            sensor_->getObservations();
-
-        for (const auto& [t, obj] : lstObjs)
+        for (auto& sensor : sensors_)
         {
-            auto obs = std::dynamic_pointer_cast<mrpt::obs::CObservation>(obj);
-            ASSERT_(obs);
-            process_observation(obs);
+            sensor->doProcess();
+
+            // Get new observations
+            const mrpt::hwdrivers::CGenericSensor::TListObservations lstObjs =
+                sensor->getObservations();
+
+            for (const auto& [t, obj] : lstObjs)
+            {
+                auto obs =
+                    std::dynamic_pointer_cast<mrpt::obs::CObservation>(obj);
+                ASSERT_(obs);
+                process_observation(obs);
+            }
         }
 
         rclcpp::spin_some(this->get_node_base_interface());
